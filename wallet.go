@@ -120,21 +120,6 @@ func (w *Wallet) Import(str string) bool {
   return w._import(encBytes)
 }
 
-/*
-func (w *Wallet) PublicKeyHash(coin string) ([]byte, bool) {
-  hashedPublicKey := sha256.Sum256(w._get_public_key(coin))
-
-  hasher := ripemd160.New()
-  _, err := hasher.Write(hashedPublicKey[:])
-  if err != nil {
-    glog.Errorf("ERR: PublicKeyHash: %v", err)
-    return nil, true
-  }
-  publicRipeMd := hasher.Sum(nil)
-
-  return publicRipeMd, true
-}*/
-
 func (w *Wallet) GetMD5Hash(text string) string {
   hasher := md5.New()
   hasher.Write([]byte(text))

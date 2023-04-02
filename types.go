@@ -22,7 +22,7 @@ func NewTypesWallet() (*TypesWallet) {
                                                 Code: "hd",
                                                 Name: "HD Wallet",
                                                 Description: "Coins: BTC, LTC, DOGE, DASH, ETH, ETC, BCH, QTUM, USDT, IOST, USDC, TRX, BNB(Binance Chain), FIL",
-                                                Coins: []string{"BTC", "ETH", "ETC", "USDT", "ECOS"},
+                                                Coins: []string{"BTC", "ETH", "ETC", "USDT", "ECOS", "EVER"},
                                               },
                                       },
   }

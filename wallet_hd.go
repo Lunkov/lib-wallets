@@ -5,7 +5,8 @@ import (
   "encoding/gob"
 
   "github.com/golang/glog"
-  "github.com/foxnut/go-hdwallet"
+
+  "github.com/Lunkov/go-hdwallet"
   "github.com/Lunkov/lib-messages"
 )
 
@@ -23,19 +24,21 @@ func newWalletHD() IWallet {
   w := &WalletHD{}
   w._export = w.__export
   w._import = w.__import
-  //w._get_public_key = w.__get_public_key
   return w
 }
 
 func (w *WalletHD) Create(prop *map[string]string) bool {
   mnemonic, ok := (*prop)["mnemonic"]
   if !ok {
-    return ok
+    return false
+  }
+  seed, err := hdwallet.NewSeed(mnemonic, "", hdwallet.English)
+  if err != nil {
+    glog.Errorf("ERR: Wallet.Create: %v", err)
+    return false
   }
   w.Mnemonic = mnemonic
-  w.Master, _ = hdwallet.NewKey(
-    hdwallet.Mnemonic(mnemonic),
-  )
+  w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
   return w.Master != nil
 }
 
@@ -59,9 +62,14 @@ func (w *WalletHD) __import(buffer []byte) bool {
   w.Name = we.Name
   w.Type = we.Type
   w.Mnemonic = we.Secret
-  w.Master, _ = hdwallet.NewKey(
-    hdwallet.Mnemonic(w.Mnemonic),
-  )
+
+  seed, err := hdwallet.NewSeed(w.Mnemonic, "", hdwallet.English)
+  if err != nil {
+    glog.Errorf("ERR: Wallet.Create: %v", err)
+    return false
+  }
+  w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
+
   return true
 }
 
@@ -85,6 +93,14 @@ func (w *WalletHD) GetAddress(coin string) string {
          break
     case "ETC":
          wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.ETC))
+         address, _ = wallet.GetAddress()
+         break
+    case "ECOS":
+         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.ECOS))
+         address, _ = wallet.GetAddress()
+         break
+    case "EVER":
+         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.EVER))
          address, _ = wallet.GetAddress()
          break
   }
