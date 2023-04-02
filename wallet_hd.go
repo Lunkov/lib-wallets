@@ -83,6 +83,10 @@ func (w *WalletHD) GetBalance() ([]*messages.Balance) {
 func (w *WalletHD) GetAddress(coin string) string {
   var address string
   switch coin {
+    case "USDT":
+         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.USDT), hdwallet.AddressIndex(1))
+         address, _ = wallet.GetAddress()
+         break
     case "BTC":
          wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.BTC), hdwallet.AddressIndex(1))
          address, _ = wallet.GetAddress()
