@@ -2,12 +2,16 @@ package wallets
 
 import (
   "bytes"
+  "sync"
   "encoding/gob"
-
+  "context"
   "github.com/golang/glog"
 
   "github.com/Lunkov/go-hdwallet"
   "github.com/Lunkov/lib-messages"
+  
+  "github.com/ethereum/go-ethereum/common"
+  "github.com/ethereum/go-ethereum/ethclient"
 )
 
 // https://dev.to/nheindev/building-a-blockchain-in-go-pt-v-wallets-12na
@@ -74,9 +78,31 @@ func (w *WalletHD) __import(buffer []byte) bool {
 }
 
 func (w *WalletHD) GetBalance() ([]*messages.Balance) {
+  var wg sync.WaitGroup
   b := messages.NewBalances()
   // b["btc"] = "10.00"
   // b["ecos"] = "10000.00"
+  wg.Add(1)
+  go func() {
+    defer wg.Done()
+    client, err := ethclient.Dial("https://mainnet.infura.io")
+    if err != nil {
+      glog.Errorf("ERR: Wallet.ethclient.Dial: %v", err)
+      return
+    }
+    b1 := messages.NewBalance()
+    b1.Address = w.GetAddress("ETH")
+    b1.Coin = "ETH"
+    account := common.HexToAddress(b1.Address)
+    balance, errb := client.BalanceAt(context.Background(), account, nil)
+    if errb != nil {
+      glog.Errorf("ERR: Wallet.ethclient.BalanceAt: %v", errb)
+      return
+    }
+    b1.Balance = balance.Uint64()
+    b.Add(b1)
+  } ()
+  wg.Wait()
   return b.GetBalanses()
 }
 
