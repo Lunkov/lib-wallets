@@ -44,11 +44,11 @@ func (ws *Wallets) Load(scanPath string, password string) bool {
     if glog.V(2) {
       glog.Infof("LOG: Loading file: '%s'", filename)
     }
-    w := newWallet()
+    w := NewEmptyWallet()
     if !w.Load(filename, password) {
       continue
     }
-    nw := NewWallet(w.GetType())
+    nw := NewWallet(w.Type)
     if !nw.Load(filename, password) {
       continue
     }

@@ -2,34 +2,45 @@ package wallets
 
 import (
   "bytes"
-  "sync"
   "encoding/gob"
-  "context"
+  "crypto/ecdsa"
   "github.com/golang/glog"
 
   "github.com/Lunkov/go-hdwallet"
-  "github.com/Lunkov/lib-messages"
   
-  "github.com/ethereum/go-ethereum/common"
-  "github.com/ethereum/go-ethereum/ethclient"
+  "github.com/Lunkov/lib-cipher"
+  //"github.com/Lunkov/lib-messages"
+  
+  //"github.com/ethereum/go-ethereum/common"
+  //"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // https://dev.to/nheindev/building-a-blockchain-in-go-pt-v-wallets-12na
 
 
 type WalletHD struct {
-  Wallet
-  Mnemonic        string          `yaml:"-"`
+  Name            string          `yaml:"name"`
+  Type            string          `yaml:"type"`
+  Path            string          `yaml:"path"`
+  Loaded          bool            `yaml:"-"`
   Pass            string          `yaml:"-"`
+  
+  Mnemonic        string          `yaml:"-"`
   Master         *hdwallet.Key    `yaml:"-"`
 }
 
 func newWalletHD() IWallet {
-  w := &WalletHD{}
-  w._export = w.__export
-  w._import = w.__import
-  return w
+  return &WalletHD{Type: "HD"}
 }
+
+func (w *WalletHD) SetName(name string) { w.Name = name }
+func (w *WalletHD) GetName() string     { return w.Name }
+
+func (w *WalletHD) SetType(t string) { w.Type = t }
+func (w *WalletHD) GetType() string  { return w.Type }
+
+func (w *WalletHD) SetPath(p string) { w.Path = p + "/" + calcMD5Hash(w.GetAddress("ECOS"))  }
+func (w *WalletHD) GetPath() string  { return w.Path }
 
 func (w *WalletHD) Create(prop *map[string]string) bool {
   mnemonic, ok := (*prop)["mnemonic"]
@@ -46,7 +57,21 @@ func (w *WalletHD) Create(prop *map[string]string) bool {
   return w.Master != nil
 }
 
-func (w *WalletHD) __export() []byte {
+func (w *WalletHD) GetECDSAPrivateKey() *ecdsa.PrivateKey {
+  if w.Master == nil {
+    return nil
+  }
+  return w.Master.PrivateECDSA
+}
+
+func (w *WalletHD) GetECDSAPublicKey()  *ecdsa.PublicKey {
+  if w.Master == nil {
+    return nil
+  }
+  return w.Master.PublicECDSA
+}
+  
+func (w *WalletHD) Export() []byte {
   we := WalletExport{Name: w.Name, Type: w.Type, Secret: w.Mnemonic}
   var buff bytes.Buffer
   encoder := gob.NewEncoder(&buff)
@@ -54,7 +79,7 @@ func (w *WalletHD) __export() []byte {
   return buff.Bytes()
 }
 
-func (w *WalletHD) __import(buffer []byte) bool {
+func (w *WalletHD) Import(buffer []byte) bool {
   var we WalletExport
   buf := bytes.NewBuffer(buffer)
   decoder := gob.NewDecoder(buf)
@@ -75,35 +100,6 @@ func (w *WalletHD) __import(buffer []byte) bool {
   w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
 
   return true
-}
-
-func (w *WalletHD) GetBalance() ([]*messages.Balance) {
-  var wg sync.WaitGroup
-  b := messages.NewBalances()
-  // b["btc"] = "10.00"
-  // b["ecos"] = "10000.00"
-  wg.Add(1)
-  go func() {
-    defer wg.Done()
-    client, err := ethclient.Dial("https://mainnet.infura.io")
-    if err != nil {
-      glog.Errorf("ERR: Wallet.ethclient.Dial: %v", err)
-      return
-    }
-    b1 := messages.NewBalance()
-    b1.Address = w.GetAddress("ETH")
-    b1.Coin = "ETH"
-    account := common.HexToAddress(b1.Address)
-    balance, errb := client.BalanceAt(context.Background(), account, nil)
-    if errb != nil {
-      glog.Errorf("ERR: Wallet.ethclient.BalanceAt: %v", errb)
-      return
-    }
-    b1.Balance = balance.Uint64()
-    b.Add(b1)
-  } ()
-  wg.Wait()
-  return b.GetBalanses()
 }
 
 func (w *WalletHD) GetAddress(coin string) string {
@@ -135,4 +131,19 @@ func (w *WalletHD) GetAddress(coin string) string {
          break
   }
   return address
+}
+
+func (w *WalletHD) Save(pathname string, password string) bool {
+  cf := cipher.NewCFile()
+  filename := pathname + "/" + calcMD5Hash(w.GetAddress("ECOS")) + ".wallet"
+  return cf.SaveFilePwd(filename, password, w.Export())
+}
+
+func (w *WalletHD) Load(filename string, password string) bool {
+  cf := cipher.NewCFile()
+  buf, ok := cf.LoadFilePwd(filename, password)
+  if !ok {
+    return ok
+  }
+  return w.Import(buf)
 }
