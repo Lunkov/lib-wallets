@@ -9,10 +9,6 @@ import (
   "github.com/Lunkov/go-hdwallet"
   
   "github.com/Lunkov/lib-cipher"
-  //"github.com/Lunkov/lib-messages"
-  
-  //"github.com/ethereum/go-ethereum/common"
-  //"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // https://dev.to/nheindev/building-a-blockchain-in-go-pt-v-wallets-12na
@@ -20,7 +16,7 @@ import (
 
 type WalletHD struct {
   Name            string          `yaml:"name"`
-  Type            string          `yaml:"type"`
+  Type            uint32          `yaml:"type"`
   Path            string          `yaml:"path"`
   Loaded          bool            `yaml:"-"`
   Pass            string          `yaml:"-"`
@@ -30,16 +26,16 @@ type WalletHD struct {
 }
 
 func newWalletHD() IWallet {
-  return &WalletHD{Type: "HD"}
+  return &WalletHD{Type: TypeWalletHD}
 }
 
 func (w *WalletHD) SetName(name string) { w.Name = name }
 func (w *WalletHD) GetName() string     { return w.Name }
 
-func (w *WalletHD) SetType(t string) { w.Type = t }
-func (w *WalletHD) GetType() string  { return w.Type }
+func (w *WalletHD) SetType(t uint32) { w.Type = t }
+func (w *WalletHD) GetType() uint32  { return w.Type }
 
-func (w *WalletHD) SetPath(p string) { w.Path = p + "/" + calcMD5Hash(w.GetAddress("ECOS"))  }
+func (w *WalletHD) SetPath(p string) { w.Path = p + "/" + calcMD5Hash(w.GetAddress(hdwallet.ECOS))  }
 func (w *WalletHD) GetPath() string  { return w.Path }
 
 func (w *WalletHD) Create(prop *map[string]string) bool {
@@ -102,30 +98,18 @@ func (w *WalletHD) Import(buffer []byte) bool {
   return true
 }
 
-func (w *WalletHD) GetAddress(coin string) string {
+func (w *WalletHD) GetAddress(coin uint32) string {
   var address string
   switch coin {
-    case "USDT":
+    case hdwallet.USDT:
          wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.USDT), hdwallet.AddressIndex(1))
          address, _ = wallet.GetAddress()
          break
-    case "BTC":
+    case hdwallet.BTC:
          wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.BTC), hdwallet.AddressIndex(1))
          address, _ = wallet.GetAddress()
          break
-    case "ETH":
-         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.ETH))
-         address, _ = wallet.GetAddress()
-         break
-    case "ETC":
-         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.ETC))
-         address, _ = wallet.GetAddress()
-         break
-    case "ECOS":
-         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.ECOS))
-         address, _ = wallet.GetAddress()
-         break
-    case "EVER":
+    case hdwallet.ETH, hdwallet.ETC, hdwallet.ECOS, hdwallet.EVER:
          wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.EVER))
          address, _ = wallet.GetAddress()
          break
@@ -135,7 +119,7 @@ func (w *WalletHD) GetAddress(coin string) string {
 
 func (w *WalletHD) Save(pathname string, password string) bool {
   cf := cipher.NewCFile()
-  filename := pathname + "/" + calcMD5Hash(w.GetAddress("ECOS")) + ".wallet"
+  filename := pathname + "/" + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
   return cf.SaveFilePwd(filename, password, w.Export())
 }
 

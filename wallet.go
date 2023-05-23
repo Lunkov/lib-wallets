@@ -12,11 +12,16 @@ import (
   "github.com/Lunkov/lib-cipher"
 )
 
+const (
+  TypeWalletHD     = 1
+)
+
+
 type IWallet interface {
   SetName(name string)
   GetName() string
-  SetType(t string)
-  GetType() string
+  SetType(t uint32)
+  GetType() uint32
   SetPath(p string)
   GetPath() string
   
@@ -28,15 +33,15 @@ type IWallet interface {
   Export() []byte
   Import(buffer []byte) bool
   
-  GetAddress(coin string) string
+  GetAddress(coin uint32) string
 
   GetECDSAPrivateKey() *ecdsa.PrivateKey
   GetECDSAPublicKey()  *ecdsa.PublicKey
 }
 
-func NewWallet(t string) IWallet {
+func NewWallet(t uint32) IWallet {
   switch t {
-    case "HD":
+    case TypeWalletHD:
          w := newWalletHD()
          w.SetType(t)
          return w
@@ -47,14 +52,14 @@ func NewWallet(t string) IWallet {
 
 type WalletExport struct {
   Name          string   `yaml:"name"`
-  Type          string   `yaml:"type"`
+  Type          uint32   `yaml:"type"`
   Public        string   `yaml:"public"`
   Secret        string   `yaml:"secret"`
 }
 
 type EmptyWallet struct {
   Name            string   `yaml:"name"`
-  Type            string   `yaml:"type"`
+  Type            uint32   `yaml:"type"`
 }
 
 func NewEmptyWallet() *EmptyWallet {
