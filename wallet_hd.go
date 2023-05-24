@@ -110,7 +110,7 @@ func (w *WalletHD) GetAddress(coin uint32) string {
          address, _ = wallet.GetAddress()
          break
     case hdwallet.ETH, hdwallet.ETC, hdwallet.ECOS, hdwallet.EVER:
-         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(hdwallet.EVER))
+         wallet, _ := w.Master.GetWallet(hdwallet.CoinType(coin))
          address, _ = wallet.GetAddress()
          break
   }

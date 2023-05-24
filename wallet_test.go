@@ -17,7 +17,7 @@ func TestWalletHD(t *testing.T) {
   addr1 := w1.GetAddress(hdwallet.ECOS)
   addr2 := w2.GetAddress(hdwallet.ECOS)
   
-  assert.Equal(t, "0x5fAD534AadacBe64E43944CAEfAC04B087B75F9D", addr1)
-  assert.Equal(t, "0x8E348b74e2f52f1c97ADBf0aA42b4c3FC7961fA6", addr2)
+  assert.Equal(t, "0x5f7ae710cED588D42E863E9b55C7c51e56869963", addr1)
+  assert.Equal(t, "0xfa242EE498857ec3C06a2E5E9e37b090807B467a", addr2)
   
 }
