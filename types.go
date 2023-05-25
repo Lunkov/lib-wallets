@@ -11,14 +11,14 @@ type TypeWallet struct {
 }
 
 type TypesWallet struct {
-  mapTypes   map[string]TypeWallet
+  mapTypes   map[uint32]TypeWallet
 }
 
 func NewTypesWallet() (*TypesWallet) {
   return &TypesWallet{
-      mapTypes  : map[string]TypeWallet{
+      mapTypes  : map[uint32]TypeWallet{
                                         /* https://goethereumbook.org/hd-wallet/ */
-                                        "hd": TypeWallet{
+                                        TypeWalletHD: TypeWallet{
                                                 Code: "hd",
                                                 Name: "HD Wallet",
                                                 Description: "Coins: BTC, LTC, DOGE, DASH, ETH, ETC, BCH, QTUM, USDT, IOST, USDC, TRX, BNB(Binance Chain), FIL",
@@ -40,25 +40,25 @@ func (t *TypesWallet) GetCodes() ([]string) {
   return keys
 }
 
-func (t *TypesWallet) FindCodeByName(code string) (string, bool) {
+func (t *TypesWallet) FindIdByName(name string) (uint32, bool) {
   for k, v := range t.mapTypes {
-    if code == v.Name {
+    if name == v.Name {
       return k, true
     }
   }
-  return "", false
+  return 0, false
 }
 
-func (t *TypesWallet) GetName(code string) (string) {
-  l, ok := t.mapTypes[code]
+func (t *TypesWallet) GetName(id uint32) (string) {
+  l, ok := t.mapTypes[id]
   if ok {
     return l.Name
   }
   return ""
 }
 
-func (t *TypesWallet) Get(code string) (*TypeWallet) {
-  l, ok := t.mapTypes[code]
+func (t *TypesWallet) Get(id uint32) (*TypeWallet) {
+  l, ok := t.mapTypes[id]
   if ok {
     return &l
   }
