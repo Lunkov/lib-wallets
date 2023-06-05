@@ -80,7 +80,9 @@ func (w *EmptyWallet) Deserialize(buffer []byte) bool {
   decoder := gob.NewDecoder(buf)
   err := decoder.Decode(w)
   if err != nil {
-    glog.Errorf("ERR: gob.NewDecoder: %v", err)
+    if glog.V(2) {
+      glog.Errorf("ERR: gob.NewDecoder: %v", err)
+    }
     return false
   }
   return true

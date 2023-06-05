@@ -37,7 +37,9 @@ func (ws *Wallets) Add(w IWallet) {
 func (ws *Wallets) Load(scanPath string, password string) bool {
   files, err := filepath.Glob(scanPath)
   if err != nil {
-    glog.Errorf("ERR: scanPath(%s)  #%v ", scanPath, err)
+    if glog.V(2) {
+      glog.Errorf("ERR: scanPath(%s)  #%v ", scanPath, err)
+    }
     return false
   }
   for _, filename := range files {

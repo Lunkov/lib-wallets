@@ -45,7 +45,9 @@ func (w *WalletHD) Create(prop *map[string]string) bool {
   }
   seed, err := hdwallet.NewSeed(mnemonic, "", hdwallet.English)
   if err != nil {
-    glog.Errorf("ERR: Wallet.Create: %v", err)
+    if glog.V(2) {
+      glog.Errorf("ERR: Wallet.Create: %v", err)
+    }
     return false
   }
   w.Mnemonic = mnemonic
@@ -81,7 +83,9 @@ func (w *WalletHD) Import(buffer []byte) bool {
   decoder := gob.NewDecoder(buf)
   err := decoder.Decode(&we)
   if err != nil {
-    glog.Errorf("ERR: gob.NewDecoder: %v", err)
+    if glog.V(2) {
+      glog.Errorf("ERR: gob.NewDecoder: %v", err)
+    }
     return false
   }
   w.Name = we.Name
@@ -90,7 +94,9 @@ func (w *WalletHD) Import(buffer []byte) bool {
 
   seed, err := hdwallet.NewSeed(w.Mnemonic, "", hdwallet.English)
   if err != nil {
-    glog.Errorf("ERR: Wallet.Create: %v", err)
+    if glog.V(2) {
+      glog.Errorf("ERR: Wallet.Create: %v", err)
+    }
     return false
   }
   w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
