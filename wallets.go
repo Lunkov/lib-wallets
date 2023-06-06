@@ -1,40 +1,76 @@
 package wallets
 
 import (
+  "os"
+  "sync"
   "path/filepath"
+  "github.com/Lunkov/go-hdwallet"
+  
   "github.com/golang/glog"
 )
 
+type WalletStorage struct {
+  Wallet   IWallet
+  Filename string
+}
+
 type Wallets struct {
-  Wallets    []IWallet             `yaml:"wallets,omitempty"`
+  Wallets    []WalletStorage       `yaml:"wallets,omitempty"`
+  mu           sync.RWMutex        `yaml:"-"`
   Types      *TypesWallet          `yaml:"-"`
 }
 
 func NewWallets() *Wallets {
   return &Wallets{
-       Wallets: make([]IWallet, 0),
+       Wallets: make([]WalletStorage, 0),
        Types: NewTypesWallet(),
     }
 }
 
 func (ws *Wallets) Count() int {
-  return len(ws.Wallets)
+  ws.mu.RLock()
+  sz := len(ws.Wallets)
+  ws.mu.RUnlock()
+  return sz
 }
 
 func (ws *Wallets) Get(i int) IWallet {
-  return ws.Wallets[i] 
+  ws.mu.RLock()
+  defer ws.mu.RUnlock()
+  defer func() {
+                if r := recover(); r != nil {
+                }
+        }()
+  wallet := ws.Wallets[i] 
+  return wallet.Wallet
 }
 
 func (ws *Wallets) Remove(w IWallet) {
-  
-  //ws.Wallets = append(ws.Wallets[:i], ws.Wallets[i+1:]...)
+  ws.mu.Lock()
+  defer ws.mu.Unlock()
+  addr := w.GetAddress(hdwallet.ECOS)
+  for i := 0; i < len(ws.Wallets); i ++ {
+    if ws.Wallets[i].Wallet.GetAddress(hdwallet.ECOS) == addr {
+      _, err := os.Stat(ws.Wallets[i].Filename)
+      if err == nil {
+        os.Remove(ws.Wallets[i].Filename)
+      }
+      ws.Wallets = append(ws.Wallets[:i], ws.Wallets[i+1:]...)
+      break
+    }
+  }
 }
 
 func (ws *Wallets) Add(w IWallet) {
-  ws.Wallets = append(ws.Wallets, w)
+  wallet := WalletStorage{Wallet: w}
+  ws.mu.Lock()
+  ws.Wallets = append(ws.Wallets, wallet)
+  ws.mu.Unlock()
 }
 
 func (ws *Wallets) Load(scanPath string, password string) bool {
+  ws.mu.Lock()
+  defer ws.mu.Unlock()
   files, err := filepath.Glob(scanPath)
   if err != nil {
     if glog.V(2) {
@@ -54,9 +90,9 @@ func (ws *Wallets) Load(scanPath string, password string) bool {
     if !nw.Load(filename, password) {
       continue
     }
-    ws.Add(nw)
+    wallet := WalletStorage{Wallet: nw, Filename: filename}
+    ws.Wallets = append(ws.Wallets, wallet)
   }
-
   return true
 }
 
