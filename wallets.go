@@ -68,6 +68,27 @@ func (ws *Wallets) Add(w IWallet) {
   ws.mu.Unlock()
 }
 
+func (ws *Wallets) GetList() []string {
+  ws.mu.RLock()
+  defer ws.mu.RUnlock()
+  res := make([]string, 0)
+  for _, w := range ws.Wallets {
+    res = append(res, w.Wallet.GetName() + " (" + w.Wallet.GetAddress(hdwallet.ECOS) + ")")
+  } 
+  return res
+}
+
+func (ws *Wallets) GetWalletByName(name string) (IWallet, bool) {
+  ws.mu.RLock()
+  defer ws.mu.RUnlock()
+  for _, w := range ws.Wallets {
+    if name == w.Wallet.GetName() + " (" + w.Wallet.GetAddress(hdwallet.ECOS) + ")" {
+      return w.Wallet, true
+    }
+  } 
+  return nil, false
+}
+
 func (ws *Wallets) Load(scanPath string, password string) bool {
   ws.mu.Lock()
   defer ws.mu.Unlock()

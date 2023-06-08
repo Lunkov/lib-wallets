@@ -6,8 +6,6 @@ import (
   "crypto/md5"
   "encoding/hex"
   "encoding/gob"
-  
-  "github.com/golang/glog"
 
   "github.com/Lunkov/lib-cipher"
 )
@@ -79,13 +77,7 @@ func (w *EmptyWallet) Deserialize(buffer []byte) bool {
   buf := bytes.NewBuffer(buffer)
   decoder := gob.NewDecoder(buf)
   err := decoder.Decode(w)
-  if err != nil {
-    if glog.V(2) {
-      glog.Errorf("ERR: gob.NewDecoder: %v", err)
-    }
-    return false
-  }
-  return true
+  return err == nil
 }
 
 func calcMD5Hash(text string) string {
