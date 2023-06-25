@@ -1,6 +1,7 @@
 package wallets
 
 import (
+  "os"
   "bytes"
   "encoding/gob"
   "crypto/ecdsa"
@@ -34,7 +35,7 @@ func (w *WalletHD) GetName() string     { return w.Name }
 func (w *WalletHD) SetType(t uint32) { w.Type = t }
 func (w *WalletHD) GetType() uint32  { return w.Type }
 
-func (w *WalletHD) SetPath(p string) { w.Path = p + "/" + calcMD5Hash(w.GetAddress(hdwallet.ECOS))  }
+func (w *WalletHD) SetPath(p string) { w.Path = p + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS))  }
 func (w *WalletHD) GetPath() string  { return w.Path }
 
 func (w *WalletHD) Create(prop *map[string]string) bool {
@@ -115,7 +116,7 @@ func (w *WalletHD) GetAddress(coin uint32) string {
 
 func (w *WalletHD) Save(pathname string, password string) bool {
   cf := cipher.NewCFile()
-  filename := pathname + "/" + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
+  filename := pathname + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
   return cf.SaveFilePwd(filename, password, w.Export())
 }
 
