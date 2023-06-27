@@ -65,23 +65,20 @@ func (w *WalletHD) GetECDSAPublicKey()  *ecdsa.PublicKey {
   }
   return w.Master.PublicECDSA
 }
+
+func (w *WalletHD) Export() WalletExport {
+  return WalletExport{Name: w.Name, Type: w.Type, Secret: w.Mnemonic}
+}
   
-func (w *WalletHD) Export() []byte {
-  we := WalletExport{Name: w.Name, Type: w.Type, Secret: w.Mnemonic}
+func (w *WalletHD) ExportBuf() []byte {
+  we := w.Export()
   var buff bytes.Buffer
   encoder := gob.NewEncoder(&buff)
   encoder.Encode(we)
   return buff.Bytes()
 }
 
-func (w *WalletHD) Import(buffer []byte) bool {
-  var we WalletExport
-  buf := bytes.NewBuffer(buffer)
-  decoder := gob.NewDecoder(buf)
-  err := decoder.Decode(&we)
-  if err != nil {
-    return false
-  }
+func (w *WalletHD) Import(we WalletExport) bool {
   w.Name = we.Name
   w.Type = we.Type
   w.Mnemonic = we.Secret
@@ -93,6 +90,17 @@ func (w *WalletHD) Import(buffer []byte) bool {
   w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
 
   return true
+}
+
+func (w *WalletHD) ImportBuf(buffer []byte) bool {
+  var we WalletExport
+  buf := bytes.NewBuffer(buffer)
+  decoder := gob.NewDecoder(buf)
+  err := decoder.Decode(&we)
+  if err != nil {
+    return false
+  }
+  return w.Import(we)
 }
 
 func (w *WalletHD) GetAddress(coin uint32) string {
@@ -117,7 +125,7 @@ func (w *WalletHD) GetAddress(coin uint32) string {
 func (w *WalletHD) Save(pathname string, password string) bool {
   cf := cipher.NewCFile()
   filename := pathname + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
-  return cf.SaveFilePwd(filename, password, w.Export())
+  return cf.SaveFilePwd(filename, password, w.ExportBuf())
 }
 
 func (w *WalletHD) Load(filename string, password string) bool {
@@ -126,5 +134,5 @@ func (w *WalletHD) Load(filename string, password string) bool {
   if !ok {
     return ok
   }
-  return w.Import(buf)
+  return w.ImportBuf(buf)
 }

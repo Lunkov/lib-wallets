@@ -28,8 +28,11 @@ type IWallet interface {
   Load(filename string, password string) bool
   Save(pathname string, password string) bool
   
-  Export() []byte
-  Import(buffer []byte) bool
+  Export() WalletExport
+  Import(e WalletExport) bool
+
+  ExportBuf() []byte
+  ImportBuf(buffer []byte) bool
   
   GetAddress(coin uint32) string
 
