@@ -3,6 +3,8 @@ package wallets
 import (
   "testing"
   "github.com/stretchr/testify/assert"
+  
+  "github.com/Lunkov/go-hdwallet"
 )
 
 func TestWallets(t *testing.T) {
@@ -19,6 +21,8 @@ func TestWallets(t *testing.T) {
   assert.Equal(t, 1, wa.Count())
   wa.Add(w2)
   assert.Equal(t, 2, wa.Count())
+  
+  
   wa.Remove(w2)
   assert.Equal(t, 1, wa.Count())
   assert.Equal(t, w1, wa.Get(0))
@@ -27,7 +31,20 @@ func TestWallets(t *testing.T) {
   list := wa.GetList()
   assert.Equal(t, []string{"Wallet #1 (0x5f7ae710cED588D42E863E9b55C7c51e56869963)"}, list)
   
-  wr, ok := wa.GetWalletByName(list[0])
+  
+  wa.Add(w2)
+
+  wr, ok := wa.FindByName("name")
+  assert.False(t, ok)
+  
+  wr, ok = wa.FindByName("Wallet #2")
+  assert.True(t, ok)
+  assert.Equal(t, w2, wr)
+
+  wr, ok = wa.FindByAddress("0x00000")
+  assert.False(t, ok)
+  
+  wr, ok = wa.FindByAddress(w1.GetAddress(hdwallet.ECOS))
   assert.True(t, ok)
   assert.Equal(t, w1, wr)
 }

@@ -45,6 +45,28 @@ func (ws *Wallets) Get(i int) IWallet {
   return wallet.Wallet
 }
 
+func (ws *Wallets) FindByName(name string) (IWallet, bool)  {
+  ws.mu.RLock()
+  defer ws.mu.RUnlock()
+  for _, w := range ws.Wallets {
+    if w.Wallet.GetName() == name {
+      return w.Wallet, true
+    }
+  }
+  return nil, false
+}
+
+func (ws *Wallets) FindByAddress(address string) (IWallet, bool) {
+  ws.mu.RLock()
+  defer ws.mu.RUnlock()
+  for _, w := range ws.Wallets {
+    if address == w.Wallet.GetAddress(hdwallet.ECOS) {
+      return w.Wallet, true
+    }
+  } 
+  return nil, false
+}
+
 func (ws *Wallets) Remove(w IWallet) {
   ws.mu.Lock()
   defer ws.mu.Unlock()
@@ -78,24 +100,13 @@ func (ws *Wallets) GetList() []string {
   return res
 }
 
-func (ws *Wallets) GetWalletByName(name string) (IWallet, bool) {
-  ws.mu.RLock()
-  defer ws.mu.RUnlock()
-  for _, w := range ws.Wallets {
-    if name == w.Wallet.GetName() + " (" + w.Wallet.GetAddress(hdwallet.ECOS) + ")" {
-      return w.Wallet, true
-    }
-  } 
-  return nil, false
-}
-
 func (ws *Wallets) Load(scanPath string, password string) bool {
   ws.mu.Lock()
   defer ws.mu.Unlock()
   files, err := filepath.Glob(scanPath)
   if err != nil {
     if glog.V(2) {
-      glog.Errorf("ERR: scanPath(%s)  #%v ", scanPath, err)
+      glog.Infof("ERR: scanPath(%s)  #%v ", scanPath, err)
     }
     return false
   }
