@@ -7,7 +7,6 @@ require (
 	github.com/Lunkov/lib-cipher v0.0.0-20230324195628-77d817f26180
 	github.com/Lunkov/lib-messages v0.0.0-20230329103351-79b6281401c8
 	github.com/ethereum/go-ethereum v1.11.5
-	github.com/golang/glog v1.1.1
 	github.com/stretchr/testify v1.8.2
 )
 
@@ -23,6 +22,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
+	github.com/golang/glog v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.2.0 // indirect

@@ -5,8 +5,6 @@ import (
   "sync"
   "path/filepath"
   "github.com/Lunkov/go-hdwallet"
-  
-  "github.com/golang/glog"
 )
 
 type WalletStorage struct {
@@ -105,15 +103,9 @@ func (ws *Wallets) Load(scanPath string, password string) bool {
   defer ws.mu.Unlock()
   files, err := filepath.Glob(scanPath)
   if err != nil {
-    if glog.V(2) {
-      glog.Infof("ERR: scanPath(%s)  #%v ", scanPath, err)
-    }
     return false
   }
   for _, filename := range files {
-    if glog.V(2) {
-      glog.Infof("LOG: Loading file: '%s'", filename)
-    }
     w := NewEmptyWallet()
     if !w.Load(filename, password) {
       continue
