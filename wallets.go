@@ -98,25 +98,25 @@ func (ws *Wallets) GetList() []string {
   return res
 }
 
-func (ws *Wallets) Load(scanPath string, password string) bool {
+func (ws *Wallets) Load(scanPath string, password string) error {
   ws.mu.Lock()
   defer ws.mu.Unlock()
   files, err := filepath.Glob(scanPath)
   if err != nil {
-    return false
+    return err
   }
   for _, filename := range files {
     w := NewEmptyWallet()
-    if !w.Load(filename, password) {
+    if w.Load(filename, password) != nil {
       continue
     }
     nw := NewWallet(w.Type)
-    if !nw.Load(filename, password) {
+    if nw.Load(filename, password) != nil {
       continue
     }
     wallet := WalletStorage{Wallet: nw, Filename: filename}
     ws.Wallets = append(ws.Wallets, wallet)
   }
-  return true
+  return nil
 }
 

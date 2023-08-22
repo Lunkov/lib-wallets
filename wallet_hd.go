@@ -1,6 +1,7 @@
 package wallets
 
 import (
+  "errors"
   "os"
   "bytes"
   "encoding/gob"
@@ -38,18 +39,18 @@ func (w *WalletHD) GetType() uint32  { return w.Type }
 func (w *WalletHD) SetPath(p string) { w.Path = p + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS))  }
 func (w *WalletHD) GetPath() string  { return w.Path }
 
-func (w *WalletHD) Create(prop *map[string]string) bool {
+func (w *WalletHD) Create(prop *map[string]string) error {
   mnemonic, ok := (*prop)["mnemonic"]
   if !ok {
-    return false
+    return errors.New("Mnemonic phrase does not exists")
   }
   seed, err := hdwallet.NewSeed(mnemonic, "", hdwallet.English)
   if err != nil {
-    return false
+    return err
   }
   w.Mnemonic = mnemonic
-  w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
-  return w.Master != nil
+  w.Master, err = hdwallet.NewKey(false, hdwallet.Seed(seed))
+  return err
 }
 
 func (w *WalletHD) GetECDSAPrivateKey() *ecdsa.PrivateKey {
@@ -78,28 +79,32 @@ func (w *WalletHD) ExportBuf() []byte {
   return buff.Bytes()
 }
 
-func (w *WalletHD) Import(we WalletExport) bool {
+func (w *WalletHD) Import(we WalletExport) error {
   w.Name = we.Name
   w.Type = we.Type
   w.Mnemonic = we.Secret
 
   seed, err := hdwallet.NewSeed(w.Mnemonic, "", hdwallet.English)
   if err != nil {
-    return false
+    return err
   }
-  w.Master, _ = hdwallet.NewKey(false, hdwallet.Seed(seed))
+  w.Master, err = hdwallet.NewKey(false, hdwallet.Seed(seed))
+  if err != nil {
+    return err
+  }
 
-  return true
+  return nil
 }
 
-func (w *WalletHD) ImportBuf(buffer []byte) bool {
+func (w *WalletHD) ImportBuf(buffer []byte) error {
   var we WalletExport
   buf := bytes.NewBuffer(buffer)
   decoder := gob.NewDecoder(buf)
   err := decoder.Decode(&we)
   if err != nil {
-    return false
+    return err
   }
+  
   return w.Import(we)
 }
 
@@ -122,17 +127,17 @@ func (w *WalletHD) GetAddress(coin uint32) string {
   return address
 }
 
-func (w *WalletHD) Save(pathname string, password string) bool {
+func (w *WalletHD) Save(pathname string, password string) error {
   cf := cipher.NewCFile()
   filename := pathname + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
   return cf.SaveFilePwd(filename, password, w.ExportBuf())
 }
 
-func (w *WalletHD) Load(filename string, password string) bool {
+func (w *WalletHD) Load(filename string, password string) error {
   cf := cipher.NewCFile()
-  buf, ok := cf.LoadFilePwd(filename, password)
-  if !ok {
-    return ok
+  buf, err := cf.LoadFilePwd(filename, password)
+  if err != nil {
+    return err
   }
   return w.ImportBuf(buf)
 }

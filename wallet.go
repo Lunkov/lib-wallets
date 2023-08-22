@@ -23,16 +23,16 @@ type IWallet interface {
   SetPath(p string)
   GetPath() string
   
-  Create(prop *map[string]string) bool
+  Create(prop *map[string]string) error
 
-  Load(filename string, password string) bool
-  Save(pathname string, password string) bool
+  Load(filename string, password string) error
+  Save(pathname string, password string) error
   
   Export() WalletExport
-  Import(e WalletExport) bool
+  Import(e WalletExport) error
 
   ExportBuf() []byte
-  ImportBuf(buffer []byte) bool
+  ImportBuf(buffer []byte) error
   
   GetAddress(coin uint32) string
 
@@ -67,20 +67,20 @@ func NewEmptyWallet() *EmptyWallet {
   return &EmptyWallet{}
 }
 
-func (w *EmptyWallet) Load(filename string, password string) bool {
+func (w *EmptyWallet) Load(filename string, password string) error {
   cf := cipher.NewCFile()
-  buf, ok := cf.LoadFilePwd(filename, password)
-  if !ok {
-    return ok
+  buf, err := cf.LoadFilePwd(filename, password)
+  if err != nil {
+    return err
   }
   return w.Deserialize(buf)
 }
 
-func (w *EmptyWallet) Deserialize(buffer []byte) bool {
+func (w *EmptyWallet) Deserialize(buffer []byte) error {
   buf := bytes.NewBuffer(buffer)
   decoder := gob.NewDecoder(buf)
   err := decoder.Decode(w)
-  return err == nil
+  return err
 }
 
 func calcMD5Hash(text string) string {
