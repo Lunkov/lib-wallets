@@ -25,8 +25,9 @@ type IWallet interface {
   
   Create(prop *map[string]string) error
 
-  Load(filename string, password string) error
-  Save(pathname string, password string) error
+  LoadFile(filename string, password string) error
+  SaveFile(filename string, password string) error
+  Save2Folder(pathname string, password string) error
   
   Export() WalletExport
   Import(e WalletExport) error

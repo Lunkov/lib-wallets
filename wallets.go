@@ -111,7 +111,7 @@ func (ws *Wallets) Load(scanPath string, password string) error {
       continue
     }
     nw := NewWallet(w.Type)
-    if nw.Load(filename, password) != nil {
+    if nw.LoadFile(filename, password) != nil {
       continue
     }
     wallet := WalletStorage{Wallet: nw, Filename: filename}

@@ -127,13 +127,18 @@ func (w *WalletHD) GetAddress(coin uint32) string {
   return address
 }
 
-func (w *WalletHD) Save(pathname string, password string) error {
+func (w *WalletHD) Save2Folder(pathname string, password string) error {
   cf := cipher.NewCFile()
   filename := pathname + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
   return cf.SaveFilePwd(filename, password, w.ExportBuf())
 }
 
-func (w *WalletHD) Load(filename string, password string) error {
+func (w *WalletHD) SaveFile(filename string, password string) error {
+  cf := cipher.NewCFile()
+  return cf.SaveFilePwd(filename, password, w.ExportBuf())
+}
+
+func (w *WalletHD) LoadFile(filename string, password string) error {
   cf := cipher.NewCFile()
   buf, err := cf.LoadFilePwd(filename, password)
   if err != nil {
