@@ -32,9 +32,9 @@ type IWallet interface {
   Export() WalletExport
   Import(e WalletExport) error
 
-  ExportBuf() []byte
-  ImportBuf(buffer []byte) error
-  
+  Serialize() ([]byte, error)
+  Deserialize(buf []byte) error
+
   GetAddress(coin uint32) string
 
   GetECDSAPrivateKey() *ecdsa.PrivateKey

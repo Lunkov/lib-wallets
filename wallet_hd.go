@@ -71,12 +71,12 @@ func (w *WalletHD) Export() WalletExport {
   return WalletExport{Name: w.Name, Type: w.Type, Secret: w.Mnemonic}
 }
   
-func (w *WalletHD) ExportBuf() []byte {
+func (w *WalletHD) Serialize() ([]byte, error) {
   we := w.Export()
   var buff bytes.Buffer
   encoder := gob.NewEncoder(&buff)
   encoder.Encode(we)
-  return buff.Bytes()
+  return buff.Bytes(), nil
 }
 
 func (w *WalletHD) Import(we WalletExport) error {
@@ -96,7 +96,7 @@ func (w *WalletHD) Import(we WalletExport) error {
   return nil
 }
 
-func (w *WalletHD) ImportBuf(buffer []byte) error {
+func (w *WalletHD) Deserialize(buffer []byte) error {
   var we WalletExport
   buf := bytes.NewBuffer(buffer)
   decoder := gob.NewDecoder(buf)
@@ -130,12 +130,14 @@ func (w *WalletHD) GetAddress(coin uint32) string {
 func (w *WalletHD) Save2Folder(pathname string, password string) error {
   cf := cipher.NewCFile()
   filename := pathname + string(os.PathSeparator) + calcMD5Hash(w.GetAddress(hdwallet.ECOS)) + ".wallet"
-  return cf.SaveFilePwd(filename, password, w.ExportBuf())
+  buf, _ := w.Serialize()
+  return cf.SaveFilePwd(filename, password, buf)
 }
 
 func (w *WalletHD) SaveFile(filename string, password string) error {
   cf := cipher.NewCFile()
-  return cf.SaveFilePwd(filename, password, w.ExportBuf())
+  buf, _ := w.Serialize()
+  return cf.SaveFilePwd(filename, password, buf)
 }
 
 func (w *WalletHD) LoadFile(filename string, password string) error {
@@ -144,5 +146,5 @@ func (w *WalletHD) LoadFile(filename string, password string) error {
   if err != nil {
     return err
   }
-  return w.ImportBuf(buf)
+  return w.Deserialize(buf)
 }
